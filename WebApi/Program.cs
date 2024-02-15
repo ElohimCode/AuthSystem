@@ -21,6 +21,7 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddIdentitySettings();
 builder.Services.AddIdentityServices();
 builder.Services.AddApplicationServices();
+builder.Services.AddJwtAuthentication(builder.Services.GetApplicationSettings(builder.Configuration));
 //builder.Services.AddRepositoryService();
 builder.Services.AddPersistenceDependencies();
 
