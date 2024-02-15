@@ -8,11 +8,11 @@ using WebApi.Controllers.Common;
 namespace WebApi.Controllers.Identity
 {
     [Route("api/[controller]")]
-    public class UsersController : BaseController<UsersController>
+    public class UserController : BaseController<UserController>
     {
         private readonly IMediator _mediator;
 
-        public UsersController(IMediator mediator)
+        public UserController(IMediator mediator)
         {
             _mediator = mediator;
         }
@@ -27,6 +27,18 @@ namespace WebApi.Controllers.Identity
                 return Ok(response);
             }
             return BadRequest(response);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> GetRefreshToken(RefreshTokenQuery request)
+        {
+            var response = await _mediator.Send(request);
+            if(response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+
         }
     }
 }

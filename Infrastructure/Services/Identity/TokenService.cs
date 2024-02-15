@@ -30,12 +30,6 @@ namespace Infrastructure.Services.Identity
             _appConfiguration = appConfiguration.Value;
         }
 
-
-        public Task<ResponseWrapper<TokenResponse>> GetRefreshTokenAsync(RefreshTokenRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<ResponseWrapper<TokenResponse>> GetTokenAsync(TokenRequest request)
         {
             // Validate user
@@ -81,6 +75,60 @@ namespace Infrastructure.Services.Identity
             return await ResponseWrapper<TokenResponse>.SuccessAsync(response);
         }
 
+        public async Task<ResponseWrapper<TokenResponse>> GetRefreshTokenAsync(RefreshTokenRequest request)
+        {
+            if (request is null)
+            {
+                return await ResponseWrapper<TokenResponse>.FailAsync("Invalid client token.");
+            }
+
+            var userPrincipal = GetPrincipalFromExpiredToken(request.Token);
+            var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
+            var user = await _userManager.FindByEmailAsync(userEmail);
+
+            if (user is null)
+            {
+                return await ResponseWrapper<TokenResponse>.FailAsync("User not found.");
+            }
+            if (user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiry <= DateTime.Now)
+            {
+                return await ResponseWrapper<TokenResponse>.FailAsync("Invalid client token.");
+            }
+            var token = GenerateEncrytedToken(GetSigningCredentials(), await GetClaimsAsync(user));
+            user.RefreshToken = GenerateRefreshToken();
+            await _userManager.UpdateAsync(user);
+
+            var response = new TokenResponse
+            {
+                Token = token,
+                RefreshToken = user.RefreshToken,
+                RefreshTokenExpiry = user.RefreshTokenExpiry
+            };
+            return await ResponseWrapper<TokenResponse>.SuccessAsync(response);
+        }
+
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appConfiguration.Secret)),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                RoleClaimType = ClaimTypes.Role,
+                ClockSkew = TimeSpan.Zero
+            };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+            if (securityToken is not JwtSecurityToken jwtSecurityToken 
+                || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid token.");
+            }
+            return principal;
+        }
+
+       
         private async Task<string> GenerateJWTAsync(ApplicationUser user)
         {
             var token = GenerateEncrytedToken(GetSigningCredentials(), await GetClaimsAsync(user));
