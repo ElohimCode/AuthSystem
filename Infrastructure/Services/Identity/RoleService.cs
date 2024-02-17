@@ -1,8 +1,10 @@
 ﻿using Application.Contracts.Services.Identity;
 using AutoMapper;
 using Common.Requests.Identity;
+using Common.Responses.Identity;
 using Common.Responses.Wrappers;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Models;
 
 namespace Infrastructure.Services.Identity
@@ -47,14 +49,26 @@ namespace Infrastructure.Services.Identity
             throw new NotImplementedException();
         }
 
-        public Task<IResponseWrapper> GetAsync()
+        public async Task<IResponseWrapper> GetAsync()
         {
-            throw new NotImplementedException();
+            var roles = await _roleManager.Roles.ToListAsync();
+            if (roles.Count > 0)
+            {
+                var mappedRoles = _mapper.Map<List<RoleResponse>>(roles);
+                return await ResponseWrapper<List<RoleResponse>>.SuccessAsync(mappedRoles);
+            }
+            return await ResponseWrapper<string>.FailAsync("No roles were found.");
         }
 
-        public Task<IResponseWrapper> GetByIdAsync(string roleId)
+        public async Task<IResponseWrapper> GetByIdAsync(string roleId)
         {
-            throw new NotImplementedException();
+           var roleExist = await _roleManager.FindByIdAsync(roleId);
+            if (roleExist is not null)
+            {
+                var mappedRole = _mapper.Map<RoleResponse>(roleExist);
+                return await ResponseWrapper<RoleResponse> .SuccessAsync(mappedRole);
+            }
+            return await ResponseWrapper.FailAsync($"Role does not exist.");
         }
 
         public Task<IResponseWrapper> GetPermissionsAsync(string roleId)
