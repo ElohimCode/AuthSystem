@@ -1,4 +1,5 @@
-﻿using Application.Features.Identity.User.Queries;
+﻿using Application.Features.Identity.User.Commands;
+using Application.Features.Identity.User.Queries;
 using Common.Requests.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -39,6 +40,18 @@ namespace WebApi.Controllers.Identity
             }
             return BadRequest(response);
 
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterAsync(UserRegistrationCommand request)
+        {
+            var response = await _mediator.Send(request);
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
         }
     }
 }
