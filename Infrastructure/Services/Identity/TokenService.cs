@@ -11,6 +11,8 @@ using Application.AppConfigs;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Security.Cryptography;
+using Common.Utilities;
+using static Common.Utilities.Constants;
 
 
 
@@ -60,7 +62,7 @@ namespace Infrastructure.Services.Identity
             }
 
             user.RefreshToken = GenerateRefreshToken();
-            user.RefreshTokenExpiry = DateTime.Now.AddDays(7);
+            user.RefreshTokenExpiry = DateTimeUtility.AddTime(DateTimeConstants.RefreshTokenExpiry);
             // Update refresh token
             await _userManager.UpdateAsync(user);
 
@@ -138,7 +140,7 @@ namespace Infrastructure.Services.Identity
         {
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_appConfiguration.TokenExpiryInMinutes),
+                expires: DateTimeUtility.AddTime(_appConfiguration.TokenExpiryInMinutes),
                 signingCredentials: signingCredentials
                 );
             var tokenHandler = new JwtSecurityTokenHandler();

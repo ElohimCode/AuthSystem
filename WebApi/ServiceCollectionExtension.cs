@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using WebApi.Filters;
+using static Common.Utilities.Constants;
 
 namespace WebApi
 {
@@ -39,7 +40,7 @@ namespace WebApi
                 .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
                 .AddIdentity<ApplicationUser, ApplicationRole>(options =>
                 {
-                    options.Password.RequiredLength = 6;
+                    options.Password.RequiredLength = AddIdentitySettingsConstants.RequiredLength;
                     options.Password.RequireDigit = false;
                     options.Password.RequireLowercase = false;
                     options.Password.RequireNonAlphanumeric = false;
