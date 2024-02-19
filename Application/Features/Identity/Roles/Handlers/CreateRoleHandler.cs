@@ -5,18 +5,11 @@ using MediatR;
 
 namespace Application.Features.Identity.Roles.Handlers
 {
-    public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, IResponseWrapper>
+    public class CreateRoleHandler(IRoleService roleService) : IRequestHandler<CreateRoleCommand, IResponseWrapper>
     {
-        private readonly IRoleService _roleService;
-
-        public CreateRoleHandler(IRoleService roleService)
-        {
-            _roleService = roleService;
-        }
-
         public async Task<IResponseWrapper> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
         {
-            return await _roleService.CreateAsync(request);
+            return await roleService.CreateAsync(request);
         }
     }
 }

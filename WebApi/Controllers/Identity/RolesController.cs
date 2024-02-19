@@ -42,7 +42,7 @@ namespace WebApi.Controllers.Identity
         {
             var response = await mediator.Send(new GetRoleByIdQuery
             {
-                roleId = Id
+                RoleId = Id
             });
             if (response.IsSuccessful)
             {
@@ -56,6 +56,21 @@ namespace WebApi.Controllers.Identity
         public async Task<IActionResult> UpdateRole(UpdateRoleCommand request)
         {
             var response = await mediator.Send(request);
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
+        [HttpDelete("{Id}")]
+        [HasPermission(AppFeature.Roles, AppAction.Read)]
+        public async Task<IActionResult> DeleteRoles(string Id)
+        {
+            var response = await mediator.Send(new DeleteRoleCommand
+            {
+                RoleId = Id
+            });
             if (response.IsSuccessful)
             {
                 return Ok(response);

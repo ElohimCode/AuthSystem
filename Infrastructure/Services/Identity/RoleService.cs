@@ -10,23 +10,13 @@ using Persistence.Models;
 
 namespace Infrastructure.Services.Identity
 {
-    public class RoleService : IRoleService
+    public class RoleService(RoleManager<ApplicationRole> roleManager, UserManager<ApplicationUser> userManager, IMapper mapper) : IRoleService
     {
-        private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IMapper _mapper;
-
-        public RoleService(RoleManager<ApplicationRole> roleManager, UserManager<ApplicationUser> userManager, IMapper mapper)
-        {
-            _roleManager = roleManager;
-            _userManager = userManager;
-            _mapper = mapper;
-        }
 
         public async Task<IResponseWrapper> CreateAsync(CreateRoleRequest request)
         {
-            var roleExist = await _roleManager.FindByNameAsync(request.RoleName);
-            if(roleExist is not null)
+            var roleExist = await roleManager.FindByNameAsync(request.RoleName);
+            if (roleExist is not null)
             {
                 return await ResponseWrapper<string>.FailAsync($"Role with name: {request.RoleName.ToLower()} already exists.");
             }
@@ -36,7 +26,7 @@ namespace Infrastructure.Services.Identity
                 Name = request.RoleName,
                 Description = request.RoleDescription
             };
-            var result = await _roleManager.CreateAsync(roleEntity);
+            var result = await roleManager.CreateAsync(roleEntity);
             if (result.Succeeded)
             {
                 return await ResponseWrapper<string>
@@ -45,17 +35,37 @@ namespace Infrastructure.Services.Identity
             return await ResponseWrapper<string>.FailAsync(GetIdentityResultErrorDescriptions(result));
         }
 
-        public Task<IResponseWrapper> DeleteAsync(string roleId)
+        public async Task<IResponseWrapper> DeleteAsync(string roleId)
         {
-            throw new NotImplementedException();
+            var roleEntity = await roleManager.FindByIdAsync(roleId);
+            if (roleEntity is null)
+                return await ResponseWrapper.FailAsync("Role does not exist");
+
+            if (roleEntity.Name is not null && roleEntity.Name.Equals(AppRoles.Admin))
+                return await ResponseWrapper<string>.FailAsync("Not authorized to perform this operation.");
+
+            var allUsers = await userManager.Users.ToListAsync();
+
+            if (allUsers.Any(user => userManager.IsInRoleAsync(user, roleEntity.Name!).Result))
+                return await ResponseWrapper.FailAsync($"Role: {roleEntity.Name} is currently assigned to a user.");
+
+
+            var identityResult = await roleManager.DeleteAsync(roleEntity);
+            if (identityResult.Succeeded)
+            {
+                return await ResponseWrapper
+                    .SuccessAsync($"Role with name: {roleEntity.Name} is deleted successfully.");
+            }
+            return await ResponseWrapper
+                .FailAsync(GetIdentityResultErrorDescriptions(identityResult));
         }
 
         public async Task<IResponseWrapper> GetAsync()
         {
-            var roles = await _roleManager.Roles.ToListAsync();
+            var roles = await roleManager.Roles.ToListAsync();
             if (roles.Count > 0)
             {
-                var mappedRoles = _mapper.Map<List<RoleResponse>>(roles);
+                var mappedRoles = mapper.Map<List<RoleResponse>>(roles);
                 return await ResponseWrapper<List<RoleResponse>>.SuccessAsync(mappedRoles);
             }
             return await ResponseWrapper<string>.FailAsync("No roles were found.");
@@ -63,11 +73,11 @@ namespace Infrastructure.Services.Identity
 
         public async Task<IResponseWrapper> GetByIdAsync(string roleId)
         {
-           var roleExist = await _roleManager.FindByIdAsync(roleId);
+            var roleExist = await roleManager.FindByIdAsync(roleId);
             if (roleExist is not null)
             {
-                var mappedRole = _mapper.Map<RoleResponse>(roleExist);
-                return await ResponseWrapper<RoleResponse> .SuccessAsync(mappedRole);
+                var mappedRole = mapper.Map<RoleResponse>(roleExist);
+                return await ResponseWrapper<RoleResponse>.SuccessAsync(mappedRole);
             }
             return await ResponseWrapper.FailAsync($"Role does not exist.");
         }
@@ -79,18 +89,18 @@ namespace Infrastructure.Services.Identity
 
         public async Task<IResponseWrapper> UpdateAsync(UpdateRoleRequest request)
         {
-            var roleEntity = await _roleManager.FindByIdAsync(request.RoleId);
+            var roleEntity = await roleManager.FindByIdAsync(request.RoleId);
 
-            if (roleEntity is null || roleEntity.Name is null)
+            if (roleEntity is null)
                 return await ResponseWrapper.FailAsync("Role does not exist.");
 
-            if (roleEntity.Name.Equals(AppRoles.Admin))
+            if (roleEntity.Name is not null && roleEntity.Name.Equals(AppRoles.Admin))
                 return await ResponseWrapper.FailAsync("Not authorized to update Admin role.");
 
             roleEntity.Name = request.RoleName;
             roleEntity.Description = request.RoleDescription;
 
-            var identityResult = await _roleManager.UpdateAsync(roleEntity);
+            var identityResult = await roleManager.UpdateAsync(roleEntity);
             if (identityResult.Succeeded)
                 return await ResponseWrapper<string>.SuccessAsync($"Role is updated successfully.");
             return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
