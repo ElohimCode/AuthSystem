@@ -131,7 +131,6 @@ namespace WebApi
             return services;
         }
 
-
         internal static AppConfiguration GetApplicationSettings(this IServiceCollection services, IConfiguration configuration)
         {
             var appSettingsConfigSection = configuration.GetSection(nameof(AppConfiguration));

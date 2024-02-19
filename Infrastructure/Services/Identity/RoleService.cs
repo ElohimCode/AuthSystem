@@ -1,5 +1,6 @@
 ﻿using Application.Contracts.Services.Identity;
 using AutoMapper;
+using Common.Authorization;
 using Common.Requests.Identity;
 using Common.Responses.Identity;
 using Common.Responses.Wrappers;
@@ -76,9 +77,23 @@ namespace Infrastructure.Services.Identity
             throw new NotImplementedException();
         }
 
-        public Task<IResponseWrapper> UpdateAsync(UpdateRoleRequest request)
+        public async Task<IResponseWrapper> UpdateAsync(UpdateRoleRequest request)
         {
-            throw new NotImplementedException();
+            var roleEntity = await _roleManager.FindByIdAsync(request.RoleId);
+
+            if (roleEntity is null || roleEntity.Name is null)
+                return await ResponseWrapper.FailAsync("Role does not exist.");
+
+            if (roleEntity.Name.Equals(AppRoles.Admin))
+                return await ResponseWrapper.FailAsync("Not authorized to update Admin role.");
+
+            roleEntity.Name = request.RoleName;
+            roleEntity.Description = request.RoleDescription;
+
+            var identityResult = await _roleManager.UpdateAsync(roleEntity);
+            if (identityResult.Succeeded)
+                return await ResponseWrapper<string>.SuccessAsync($"Role is updated successfully.");
+            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
         }
 
         public Task<IResponseWrapper> UpdateRolePermissionsAsync(UpdateRolePermissionsRequest request)

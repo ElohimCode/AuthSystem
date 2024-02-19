@@ -9,19 +9,14 @@ using WebApi.Controllers.Common;
 namespace WebApi.Controllers.Identity
 {
     [Route("api/[controller]")]
-    public class RolesController : BaseController<RolesController>
+    public class RolesController(IMediator mediator) : BaseController<RolesController>
     {
-        private readonly IMediator _mediator;
 
-        public RolesController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
         [HttpPost]
         [HasPermission(AppFeature.Roles, AppAction.Create)]
         public async Task<IActionResult> CreateRole(CreateRoleCommand request)
         {
-            var response = await _mediator.Send(request);
+            var response = await mediator.Send(request);
             if (response.IsSuccessful)
             {
                 return Ok(response);
@@ -33,7 +28,7 @@ namespace WebApi.Controllers.Identity
         [HasPermission(AppFeature.Roles, AppAction.Read)]
         public async Task<IActionResult> GetRoles()
         {
-            var response = await _mediator.Send(new GetRolesQuery());
+            var response = await mediator.Send(new GetRolesQuery());
             if (response.IsSuccessful)
             {
                 return Ok(response);
@@ -45,10 +40,22 @@ namespace WebApi.Controllers.Identity
         [HasPermission(AppFeature.Roles, AppAction.Read)]
         public async Task<IActionResult> GetRoles(string Id)
         {
-            var response = await _mediator.Send(new GetRoleByIdQuery
+            var response = await mediator.Send(new GetRoleByIdQuery
             {
                 roleId = Id
             });
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
+        [HttpPut]
+        [HasPermission(AppFeature.Roles, AppAction.Update)]
+        public async Task<IActionResult> UpdateRole(UpdateRoleCommand request)
+        {
+            var response = await mediator.Send(request);
             if (response.IsSuccessful)
             {
                 return Ok(response);
