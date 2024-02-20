@@ -77,5 +77,33 @@ namespace WebApi.Controllers.Identity
             }
             return BadRequest(response);
         }
+
+        [HttpGet("permissions/{RoleID}")]
+        [HasPermission(AppFeature.RoleClaims, AppAction.Read)]
+        public async Task<IActionResult> GetPermissions(string RoleID)
+        {
+            var response = await mediator.Send(new GetPermissionsQuery
+            {
+                RoleId = RoleID
+            });
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
+        [HttpPut("update-permissions")]
+        [HasPermission(AppFeature.RoleClaims, AppAction.Update)]
+        public async Task<IActionResult> UpdateRolePermissions(UpdateRolePermissionsCommand request)
+        {
+            var response = await mediator.Send(request);
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
     }
 }

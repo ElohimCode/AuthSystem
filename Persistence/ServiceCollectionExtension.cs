@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Persistence.Context;
+using Persistence.DataAccess.Identiy.Contracts;
+using Persistence.DataAccess.Identiy.Services;
 using Persistence.DbConfigs;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System.Reflection;
@@ -34,7 +36,9 @@ namespace Persistence
 
         public static void AddPersistenceDependencies(this IServiceCollection services)
         {
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services
+                .AddScoped<IAuthenticationManager, AuthenticationManager>()
+                .AddAutoMapper(Assembly.GetExecutingAssembly());
         }
     }
 }

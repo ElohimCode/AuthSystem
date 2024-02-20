@@ -13,29 +13,21 @@ using System.Text;
 using System.Security.Cryptography;
 using Common.Utilities;
 using static Common.Utilities.Constants;
+using Persistence.DataAccess.Identiy.Contracts;
 
 
 
 
 namespace Infrastructure.Services.Identity
 {
-    public class TokenService : ITokenService
+    public class TokenService(IAuthenticationManager authenticationManager, IOptions<AppConfiguration> appConfiguration) : ITokenService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly AppConfiguration _appConfiguration;
 
-        public TokenService(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, IOptions<AppConfiguration> appConfiguration)
-        {
-            _userManager = userManager;
-            _roleManager = roleManager;
-            _appConfiguration = appConfiguration.Value;
-        }
 
         public async Task<ResponseWrapper<TokenResponse>> GetTokenAsync(TokenRequest request)
         {
             // Validate user
-            var user = await _userManager.FindByEmailAsync(request.Email);
+            var user = await authenticationManager.GetUserByEmailAsync(request.Email);
 
             if (user is null)
             {
@@ -55,7 +47,7 @@ namespace Infrastructure.Services.Identity
             }
 
             // Check for password
-            var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+            var isPasswordValid = await authenticationManager.CheckPasswordAsync(user, request.Password);
             if (!isPasswordValid)
             {
                 return await ResponseWrapper<TokenResponse>.FailAsync("Invalid Credentials.");
@@ -64,7 +56,7 @@ namespace Infrastructure.Services.Identity
             user.RefreshToken = GenerateRefreshToken();
             user.RefreshTokenExpiry = DateTimeUtility.AddTime(DateTimeConstants.RefreshTokenExpiry);
             // Update refresh token
-            await _userManager.UpdateAsync(user);
+            await authenticationManager.UpdateUserAsync(user);
 
             var token = await GenerateJWTAsync(user);
 
@@ -86,7 +78,7 @@ namespace Infrastructure.Services.Identity
 
             var userPrincipal = GetPrincipalFromExpiredToken(request.Token);
             var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
-            var user = await _userManager.FindByEmailAsync(userEmail);
+            var user = await authenticationManager.GetUserByEmailAsync(userEmail!);
 
             if (user is null)
             {
@@ -98,7 +90,7 @@ namespace Infrastructure.Services.Identity
             }
             var token = GenerateEncrytedToken(GetSigningCredentials(), await GetClaimsAsync(user));
             user.RefreshToken = GenerateRefreshToken();
-            await _userManager.UpdateAsync(user);
+            await authenticationManager.UpdateUserAsync(user);
 
             var response = new TokenResponse
             {
@@ -114,7 +106,7 @@ namespace Infrastructure.Services.Identity
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appConfiguration.Secret)),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appConfiguration.Value.Secret)),
                 ValidateIssuer = false,
                 ValidateAudience = false,
                 RoleClaimType = ClaimTypes.Role,
@@ -140,7 +132,7 @@ namespace Infrastructure.Services.Identity
         {
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTimeUtility.AddTime(_appConfiguration.TokenExpiryInMinutes),
+                expires: DateTimeUtility.AddTime(appConfiguration.Value.TokenExpiryInMinutes),
                 signingCredentials: signingCredentials
                 );
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -150,30 +142,30 @@ namespace Infrastructure.Services.Identity
 
         private SigningCredentials GetSigningCredentials()
         {
-            var secret = Encoding.UTF8.GetBytes(_appConfiguration.Secret);
+            var secret = Encoding.UTF8.GetBytes(appConfiguration.Value.Secret);
             return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
         }
 
 
         private async Task<IEnumerable<Claim>> GetClaimsAsync(ApplicationUser user)
         {
-            var userClaims = await _userManager.GetClaimsAsync(user);
-            var roles = await _userManager.GetRolesAsync(user);
+            var userClaims = await authenticationManager.GetUserClaimsAsync(user);
+            var roles = await authenticationManager.GetUserRolesAsync(user);
             var roleClaims = new List<Claim>();
             var permissionClaims = new List<Claim>();
 
             foreach (var role in roles)
             {
                 roleClaims.Add(new Claim(ClaimTypes.Role, role));
-                var currentRole = await _roleManager.FindByNameAsync(role);
-                var allPermissionsForCurrentRole = await _roleManager.GetClaimsAsync(currentRole);
+                var currentRole = await authenticationManager.GetRoleByNameAsync(role);
+                var allPermissionsForCurrentRole = await authenticationManager.GetAllClaimsAsync(currentRole!);
                 permissionClaims.AddRange(allPermissionsForCurrentRole);
             }
 
             var claims = new List<Claim>
             {
                 new (ClaimTypes.NameIdentifier, user.Id),
-                new (ClaimTypes.Email, user.Email),
+                new (ClaimTypes.Email, user.Email!),
                 new (ClaimTypes.Name, user.FirstName),
                 new (ClaimTypes.Surname, user.LastName),
                 new (ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty),

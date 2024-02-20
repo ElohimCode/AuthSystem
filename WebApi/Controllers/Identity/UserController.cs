@@ -9,20 +9,13 @@ using WebApi.Controllers.Common;
 namespace WebApi.Controllers.Identity
 {
     [Route("api/[controller]")]
-    public class UserController : BaseController<UserController>
+    public class UserController(IMediator mediator) : BaseController<UserController>
     {
-        private readonly IMediator _mediator;
-
-        public UserController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost("sign-in")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginAsync(LoginQuery request)
         {
-            var response = await _mediator.Send(request);
+            var response = await mediator.Send(request);
             if(response.IsSuccessful)
             {
                 return Ok(response);
@@ -33,7 +26,7 @@ namespace WebApi.Controllers.Identity
         [HttpPost("refresh-token")]
         public async Task<IActionResult> GetRefreshToken(RefreshTokenQuery request)
         {
-            var response = await _mediator.Send(request);
+            var response = await mediator.Send(request);
             if(response.IsSuccessful)
             {
                 return Ok(response);
@@ -46,7 +39,7 @@ namespace WebApi.Controllers.Identity
         [AllowAnonymous]
         public async Task<IActionResult> RegisterAsync(UserRegistrationCommand request)
         {
-            var response = await _mediator.Send(request);
+            var response = await mediator.Send(request);
             if (response.IsSuccessful)
             {
                 return Ok(response);
