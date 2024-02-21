@@ -1,6 +1,6 @@
 ﻿using Common.Responses.Models;
 
-namespace Common.Requests.Identity
+namespace Common.Requests.Identity.Roles
 {
     public class UpdateRolePermissionsRequest
     {

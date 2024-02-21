@@ -50,6 +50,11 @@ namespace Persistence.DataAccess.Identiy.Services
             return await userManager.FindByEmailAsync(email);
         }
 
+        public async Task<ApplicationUser?> GetUserByUserNameAsync(string username)
+        {
+            return await userManager.FindByNameAsync(username);
+        }
+
         public async Task<IList<Claim>> GetUserClaimsAsync(ApplicationUser user)
         {
             return await userManager.GetClaimsAsync(user);
@@ -60,16 +65,19 @@ namespace Persistence.DataAccess.Identiy.Services
             return await userManager.GetRolesAsync(user);
         }
 
-        public async Task<List<ApplicationUser>> GetUsersAsync()
-        {
-            return await userManager.Users.ToListAsync();
-        }
-
         public async Task<IdentityResult> RemoveClaimAsync(ApplicationRole role, Claim claim)
         {
             return await roleManager.RemoveClaimAsync(role, claim);
         }
 
+        public async Task<List<ApplicationUser>> GetUsersAsync()
+        {
+            return await userManager.Users.ToListAsync();
+        }
+        public async Task<IdentityResult> CreateUserAsync(ApplicationUser user)
+        {
+            return await userManager.CreateAsync(user);
+        }
         public async Task<IdentityResult> UpdateRoleAsync(ApplicationRole role)
         {
             return await roleManager.UpdateAsync(role);
@@ -83,6 +91,11 @@ namespace Persistence.DataAccess.Identiy.Services
         public async Task<bool> UserIsInRoleAsync(ApplicationUser user, string role)
         {
             return await userManager.IsInRoleAsync(user, role);
+        }
+
+        public Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string role)
+        {
+            return userManager.AddToRoleAsync(user, role);
         }
     }
 }

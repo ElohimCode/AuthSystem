@@ -1,14 +1,15 @@
-﻿using Application.Features.Identity.User.Commands;
+﻿using Application.Contracts.Services.Identity;
+using Application.Features.Identity.User.Commands;
 using Common.Responses.Wrappers;
 using MediatR;
 
 namespace Application.Features.Identity.User.Handlers
 {
-    internal class UserRegistrationHandler : IRequestHandler<UserRegistrationCommand, IResponseWrapper>
+    public class UserRegistrationHandler(IUserService userService) : IRequestHandler<UserRegistrationCommand, IResponseWrapper>
     {
-        public Task<IResponseWrapper> Handle(UserRegistrationCommand request, CancellationToken cancellationToken)
+        public async Task<IResponseWrapper> Handle(UserRegistrationCommand request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return await userService.RegisterUserAsync(request);
         }
     }
 }

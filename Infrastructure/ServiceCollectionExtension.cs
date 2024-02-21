@@ -11,7 +11,8 @@ namespace Infrastructure
         {
             services
                 .AddTransient<ITokenService, TokenService>()
-                .AddTransient<IRoleService, RoleService>();
+                .AddTransient<IRoleService, RoleService>()
+                .AddTransient<IUserService, UserService>();
 
 
             return services;

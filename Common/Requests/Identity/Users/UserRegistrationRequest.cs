@@ -1,4 +1,4 @@
-﻿namespace Common.Requests.Identity
+﻿namespace Common.Requests.Identity.Users
 {
     public class UserRegistrationRequest
     {

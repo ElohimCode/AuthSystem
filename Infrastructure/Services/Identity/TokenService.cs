@@ -1,5 +1,4 @@
 ﻿using Application.Contracts.Services.Identity;
-using Common.Requests.Identity;
 using Common.Responses.Identity;
 using Common.Responses.Wrappers;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +13,7 @@ using System.Security.Cryptography;
 using Common.Utilities;
 using static Common.Utilities.Constants;
 using Persistence.DataAccess.Identiy.Contracts;
+using Common.Requests.Identity.Tokens;
 
 
 

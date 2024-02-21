@@ -1,7 +1,7 @@
 ﻿using Application.Contracts.Services.Identity;
 using AutoMapper;
 using Common.Authorization;
-using Common.Requests.Identity;
+using Common.Requests.Identity.Roles;
 using Common.Responses.Identity;
 using Common.Responses.Models;
 using Common.Responses.Wrappers;

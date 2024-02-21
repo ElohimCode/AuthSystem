@@ -1,4 +1,4 @@
-﻿using Common.Requests.Identity;
+﻿using Common.Requests.Identity.Tokens;
 using Common.Responses.Wrappers;
 using MediatR;
 
