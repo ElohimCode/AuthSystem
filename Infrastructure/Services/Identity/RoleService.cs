@@ -83,7 +83,6 @@ namespace Infrastructure.Services.Identity
             }
             return await ResponseWrapper.FailAsync($"Role does not exist.");
         }
-
         public async Task<IResponseWrapper> GetPermissionsAsync(string roleId)
         {
             var roleEntity = await authenticationManager.GetRoleByIdAsync(roleId);

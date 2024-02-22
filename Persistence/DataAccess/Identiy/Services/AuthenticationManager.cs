@@ -54,6 +54,10 @@ namespace Persistence.DataAccess.Identiy.Services
         {
             return await userManager.FindByNameAsync(username);
         }
+        public async Task<ApplicationUser?> GetUserByIdAsync(string Id)
+        {
+            return await userManager.FindByIdAsync(Id);
+        }
 
         public async Task<IList<Claim>> GetUserClaimsAsync(ApplicationUser user)
         {
@@ -96,6 +100,11 @@ namespace Persistence.DataAccess.Identiy.Services
         public Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string role)
         {
             return userManager.AddToRoleAsync(user, role);
+        }
+
+        public async Task<IdentityResult> DeleteUserAsync(ApplicationUser user)
+        {
+            return await userManager.DeleteAsync(user);
         }
     }
 }

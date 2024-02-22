@@ -17,14 +17,14 @@ namespace Persistence.DataAccess.Identiy.Contracts
         Task<List<ApplicationUser>> GetUsersAsync();
         Task<bool> UserIsInRoleAsync(ApplicationUser user, string role);
         Task<IdentityResult> CreateUserAsync(ApplicationUser user);
+        Task<ApplicationUser?> GetUserByIdAsync(string Id);
         Task<ApplicationUser?> GetUserByEmailAsync(string email);
         Task<ApplicationUser?> GetUserByUserNameAsync(string username);
+        Task<IdentityResult> DeleteUserAsync(ApplicationUser user);
         Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
         Task<IdentityResult> UpdateUserAsync(ApplicationUser user);
         Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string role);
         Task<IList<Claim>> GetUserClaimsAsync(ApplicationUser user);
         Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
-
-
     }
 }

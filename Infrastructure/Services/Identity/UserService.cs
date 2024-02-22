@@ -1,6 +1,8 @@
 ﻿using Application.Contracts.Services.Identity;
+using AutoMapper;
 using Common.Authorization;
 using Common.Requests.Identity.Users;
+using Common.Responses.Identity;
 using Common.Responses.Wrappers;
 using Microsoft.AspNetCore.Identity;
 using Persistence.DataAccess.Identiy.Contracts;
@@ -8,11 +10,31 @@ using Persistence.Models;
 
 namespace Infrastructure.Services.Identity
 {
-    public class UserService(IAuthenticationManager authenticationManager) : IUserService
+    public class UserService(IAuthenticationManager authenticationManager, IMapper mapper) : IUserService
     {
-        public Task<IResponseWrapper> DeleteUserAsync(string id)
+        public async Task<IResponseWrapper> DeleteUserAsync(string id)
         {
-            throw new NotImplementedException();
+            // Check if user exist
+            var userEntity = await authenticationManager.GetUserByIdAsync(id);
+
+            if (userEntity is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist.");
+            }
+
+            // Check if user is not an admin
+            if (await authenticationManager.UserIsInRoleAsync(userEntity, AppRoles.Admin))
+            {
+                return await ResponseWrapper.FailAsync("Not authorized to perform operation.");
+            }
+
+            // Delete user
+            var identityResult = await authenticationManager.DeleteUserAsync(userEntity);
+            if (identityResult.Succeeded)
+            {
+                return await ResponseWrapper.SuccessAsync("User is deleted successfully.");
+            }
+            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));  
         }
 
         public Task<IResponseWrapper> GetRolesAsync(string id)
@@ -30,22 +52,28 @@ namespace Infrastructure.Services.Identity
             throw new NotImplementedException();
         }
 
-        public Task<IResponseWrapper> GetUsersAsync()
+        public async Task<IResponseWrapper> GetUsersAsync()
         {
-            throw new NotImplementedException();
+            var userEntity = await authenticationManager.GetUsersAsync();
+            if (userEntity.Count > 0)
+            {
+                var mappedUsers = mapper.Map<List<UserResponse>>(userEntity);
+                return await ResponseWrapper<List<UserResponse>>.SuccessAsync(mappedUsers);
+            }
+            return await ResponseWrapper.FailAsync("No users were found.");
         }
 
         public async Task<IResponseWrapper> RegisterUserAsync(UserRegistrationRequest request)
         {
             var userEmailExist = await authenticationManager.GetUserByEmailAsync(request.Email);
-            
-            if (userEmailExist is not  null)
+
+            if (userEmailExist is not null)
             {
                 return await ResponseWrapper.FailAsync("Email already taken.");
             }
 
             var userNameExist = await authenticationManager.GetUserByUserNameAsync(request.UserName);
-            
+
             if (userNameExist is not null)
             {
                 return await ResponseWrapper.FailAsync("Username already taken.");
