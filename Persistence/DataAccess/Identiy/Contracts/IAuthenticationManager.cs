@@ -22,6 +22,7 @@ namespace Persistence.DataAccess.Identiy.Contracts
         Task<ApplicationUser?> GetUserByUserNameAsync(string username);
         Task<IdentityResult> DeleteUserAsync(ApplicationUser user);
         Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
+        Task<IdentityResult> ChangePasswordAsync(ApplicationUser user, string currrentPassword, string newPassword);
         Task<IdentityResult> UpdateUserAsync(ApplicationUser user);
         Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string role);
         Task<IList<Claim>> GetUserClaimsAsync(ApplicationUser user);

@@ -108,9 +108,21 @@ namespace Infrastructure.Services.Identity
             return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));
         }
 
-        public Task<IResponseWrapper> UpdatePasswordAsync(UpdatePasswordRequest request)
+        public async Task<IResponseWrapper> UpdatePasswordAsync(UpdatePasswordRequest request)
         {
-            throw new NotImplementedException();
+            var userEntity = await authenticationManager.GetUserByEmailAsync(request.Email);
+            if (userEntity is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist");
+            }
+
+            var identityResult = await authenticationManager
+                .ChangePasswordAsync(userEntity, request.CurrentPassword, request.NewPassword);
+            if (identityResult.Succeeded)
+            {
+                return await ResponseWrapper<string>.SuccessAsync("User password updated successfully.");
+            }
+            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));
         }
 
         public Task<IResponseWrapper> UpdateRolesAsync(UpdateUserRolesRequest request)
@@ -118,9 +130,23 @@ namespace Infrastructure.Services.Identity
             throw new NotImplementedException();
         }
 
-        public Task<IResponseWrapper> UpdateUserAsync(UpdateUserRequest request)
+        public async Task<IResponseWrapper> UpdateUserAsync(UpdateUserRequest request)
         {
-            throw new NotImplementedException();
+            var userEntity = await authenticationManager.GetUserByIdAsync(request.UserId);
+            if (userEntity is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist.");
+            }
+            userEntity.FirstName = request.FirstName;
+            userEntity.LastName = request.LastName;
+            userEntity.PhoneNumber = request.PhoneNumber;
+
+            var identityResult = await authenticationManager.UpdateUserAsync(userEntity);
+            if (identityResult.Succeeded)
+            {
+                return await ResponseWrapper.SuccessAsync("User details updated successfully.");
+            }
+            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));
         }
 
         public Task<IResponseWrapper> UpdateUserStatusAsync(UpdateUserStatusRequest request)

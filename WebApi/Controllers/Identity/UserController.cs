@@ -99,5 +99,32 @@ namespace WebApi.Controllers.Identity
             }
             return NotFound(response);
         }
+        
+        [HttpPut]
+        [HasPermission(AppFeature.Users, AppAction.Update)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateUser(UpdateUserCommand request)
+        {
+            var response = await mediator.Send(request);
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        [HttpPut("update-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateUserPassword(UpdateUserPasswordCommand request)
+        {
+            var response = await mediator.Send(request);
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
     }
 }

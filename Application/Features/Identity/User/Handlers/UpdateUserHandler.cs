@@ -1,0 +1,15 @@
+﻿using Application.Contracts.Services.Identity;
+using Application.Features.Identity.User.Commands;
+using Common.Responses.Wrappers;
+using MediatR;
+
+namespace Application.Features.Identity.User.Handlers
+{
+    public class UpdateUserHandler(IUserService userService) : IRequestHandler<UpdateUserCommand, IResponseWrapper>
+    {
+        public async Task<IResponseWrapper> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+        {
+            return await userService.UpdateUserAsync(request);
+        }
+    }
+}

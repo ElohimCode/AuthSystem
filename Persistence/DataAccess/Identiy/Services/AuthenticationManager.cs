@@ -9,9 +9,9 @@ namespace Persistence.DataAccess.Identiy.Services
 {
     public class AuthenticationManager(RoleManager<ApplicationRole> roleManager, UserManager<ApplicationUser> userManager) : IAuthenticationManager
     {
-        public Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
+        public async Task<IdentityResult> ChangePasswordAsync(ApplicationUser user, string currentPassword, string newPassword)
         {
-            return userManager.CheckPasswordAsync(user, password);
+            return await userManager.ChangePasswordAsync(user, currentPassword, newPassword);
         }
 
         public async Task<IdentityResult> CreateRoleAsync(ApplicationRole role)
@@ -105,6 +105,11 @@ namespace Persistence.DataAccess.Identiy.Services
         public async Task<IdentityResult> DeleteUserAsync(ApplicationUser user)
         {
             return await userManager.DeleteAsync(user);
+        }
+
+        public async Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
+        {
+            return await userManager.CheckPasswordAsync(user, password);
         }
     }
 }
