@@ -16,7 +16,7 @@ namespace WebApi.Controllers.Identity
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> LoginAsync(LoginQuery request)
+        public async Task<IActionResult> Login(LoginQuery request)
         {
             var response = await mediator.Send(request);
             if(response.IsSuccessful)
@@ -42,7 +42,7 @@ namespace WebApi.Controllers.Identity
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAsync(UserRegistrationCommand request)
+        public async Task<IActionResult> Register(UserRegistrationCommand request)
         {
             var response = await mediator.Send(request);
             if (response.IsSuccessful)
@@ -59,6 +59,23 @@ namespace WebApi.Controllers.Identity
         public async Task<IActionResult> GetUsers()
         {
             var response = await mediator.Send(new GetUsersQuery());
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        [HttpGet("{Id}")]
+        [HasPermission(AppFeature.Users, AppAction.Read)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetUser(string Id)
+        {
+            var response = await mediator.Send(new GetUserQuery
+            {
+                Id = Id
+            });
             if (response.IsSuccessful)
             {
                 return Ok(response);

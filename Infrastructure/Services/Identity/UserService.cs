@@ -47,9 +47,15 @@ namespace Infrastructure.Services.Identity
             throw new NotImplementedException();
         }
 
-        public Task<IResponseWrapper> GetUserByIdAsync(string id)
+        public async Task<IResponseWrapper> GetUserByIdAsync(string id)
         {
-            throw new NotImplementedException();
+            var userEntity = await authenticationManager.GetUserByIdAsync(id);
+            if (userEntity is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist.");
+            }
+            var mappedUser = mapper.Map<UserResponse>(userEntity);
+            return await ResponseWrapper<UserResponse>.SuccessAsync(mappedUser);
         }
 
         public async Task<IResponseWrapper> GetUsersAsync()
