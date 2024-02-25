@@ -3,6 +3,7 @@ using AutoMapper;
 using Common.Authorization;
 using Common.Requests.Identity.Users;
 using Common.Responses.Identity;
+using Common.Responses.Models;
 using Common.Responses.Wrappers;
 using Microsoft.AspNetCore.Identity;
 using Persistence.DataAccess.Identiy.Contracts;
@@ -34,12 +35,33 @@ namespace Infrastructure.Services.Identity
             {
                 return await ResponseWrapper.SuccessAsync("User is deleted successfully.");
             }
-            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));  
+            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));
         }
 
-        public Task<IResponseWrapper> GetRolesAsync(string id)
+        public async Task<IResponseWrapper> GetRolesAsync(string id)
         {
-            throw new NotImplementedException();
+            var userRoles = new List<UserRoleViewModel>();
+            var userEntity = await authenticationManager.GetUserByIdAsync(id);
+
+            if (userEntity is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist");
+            }
+
+            var allRoles = await authenticationManager.GetAllRolesAsync();
+
+            var userRolesVMs = new List<UserRoleViewModel>();
+            foreach (var role in allRoles)
+            {
+                var isAssigned = await authenticationManager.UserIsInRoleAsync(userEntity, role.Name);
+                userRolesVMs.Add(new UserRoleViewModel
+                {
+                    RoleName = role.Name!,
+                    RoleDescription = role.Description,
+                    IsAssignedToUser = isAssigned
+                });
+            }
+            return await ResponseWrapper<List<UserRoleViewModel>>.SuccessAsync(userRolesVMs);
         }
 
         public Task<IResponseWrapper> GetUserByEmailAsync(string email)

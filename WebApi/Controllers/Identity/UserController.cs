@@ -3,6 +3,7 @@ using Application.Features.Identity.User.Queries;
 using Common.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Attributes;
 using WebApi.Controllers.Common;
@@ -120,6 +121,21 @@ namespace WebApi.Controllers.Identity
         public async Task<IActionResult> UpdateUserPassword(UpdateUserPasswordCommand request)
         {
             var response = await mediator.Send(request);
+            if (response.IsSuccessful)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+        
+        [HttpGet("roles/{UserId}")]
+        [HasPermission(AppFeature.Roles, AppAction.Read)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetUserRoles(string UserId)
+        {
+            var response = await mediator.Send(new GetUserRolesQuery(UserId));
+            
             if (response.IsSuccessful)
             {
                 return Ok(response);
