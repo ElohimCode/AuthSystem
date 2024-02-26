@@ -17,7 +17,7 @@ This authentication system is built using .NET 8 and incorporates roles-permissi
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your/repository.git
+git clone https://github.com/ElohimCode/AuthSystem.git
 ```
 
 2. Navigate to the project directory:
@@ -38,6 +38,9 @@ dotnet restore
 dotnet run
 ```
 
+or 
+- Load the dependencies directly using visual studio
+
 ## Configuration
 
 - **Database Connection**: Configure the database connection string in `appsettings.json` to connect to your database.
@@ -53,7 +56,7 @@ dotnet run
 
 ## Contributors
 
-- [Your Name](https://github.com/yourname)
+- [JB](https://github.com/ElohimCode)
 
 ## License
 
