@@ -111,5 +111,15 @@ namespace Persistence.DataAccess.Identiy.Services
         {
             return await userManager.CheckPasswordAsync(user, password);
         }
+
+        public async Task<IdentityResult> RemoveUserFromRolesAsync(ApplicationUser user, IList<string> role)
+        {
+            return await userManager.RemoveFromRolesAsync(user, role);
+        }
+
+        public async Task<IdentityResult> AddUserToRolesAsync(ApplicationUser user, IEnumerable<string> role)
+        {
+            return await userManager.AddToRolesAsync(user, role);
+        }
     }
 }

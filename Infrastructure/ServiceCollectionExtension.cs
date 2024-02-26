@@ -12,7 +12,8 @@ namespace Infrastructure
             services
                 .AddTransient<ITokenService, TokenService>()
                 .AddTransient<IRoleService, RoleService>()
-                .AddTransient<IUserService, UserService>();
+                .AddTransient<IUserService, UserService>()
+                .AddScoped<ICurrentUserService, CurrentUserService>();
 
 
             return services;

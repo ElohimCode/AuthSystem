@@ -11,7 +11,7 @@ using Persistence.Models;
 
 namespace Infrastructure.Services.Identity
 {
-    public class UserService(IAuthenticationManager authenticationManager, IMapper mapper) : IUserService
+    public class UserService(IAuthenticationManager authenticationManager, IMapper mapper, ICurrentUserService currentUserService) : IUserService
     {
         public async Task<IResponseWrapper> DeleteUserAsync(string id)
         {
@@ -147,9 +147,49 @@ namespace Infrastructure.Services.Identity
             return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));
         }
 
-        public Task<IResponseWrapper> UpdateRolesAsync(UpdateUserRolesRequest request)
+        public async Task<IResponseWrapper> UpdateRolesAsync(UpdateUserRolesRequest request)
         {
-            throw new NotImplementedException();
+            var userEntity = await authenticationManager.GetUserByIdAsync(request.UserId);
+            if (userEntity is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist.");
+            }
+
+            if (userEntity.Email == AppCredentials.Email)
+            {
+                return await ResponseWrapper.FailAsync("Not authorized to perform this operation.");
+            }
+            var currentAssignedRoles = await authenticationManager.GetUserRolesAsync(userEntity);
+            var rolesToBeAssigned = request.Roles
+                .Where(role => role.IsAssignedToUser == true)
+                .ToList();
+            var currentLoggedInUser = await authenticationManager
+                .GetUserByIdAsync(currentUserService.UserId);
+
+            if (currentUserService is null)
+            {
+                return await ResponseWrapper.FailAsync("User does not exist.");
+            }
+
+            if (await authenticationManager.UserIsInRoleAsync(currentLoggedInUser!, AppRoles.Admin))
+            {
+                var identityResult1 = await authenticationManager.RemoveUserFromRolesAsync(userEntity, currentAssignedRoles);
+                if (identityResult1.Succeeded)
+                {
+                    var identityResult = await authenticationManager
+                        .AddUserToRolesAsync(userEntity, rolesToBeAssigned.Select(role => role.RoleName));
+                    if(identityResult.Succeeded)
+                    {
+                        return await ResponseWrapper<string>.SuccessAsync("User roles updated successfully.");
+                    }
+                    return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult));
+                }
+                return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescription(identityResult1));
+
+            }
+            return await ResponseWrapper.FailAsync("Not authorized to perform the operation.");
+
+
         }
 
         public async Task<IResponseWrapper> UpdateUserAsync(UpdateUserRequest request)

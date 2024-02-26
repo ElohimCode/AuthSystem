@@ -118,7 +118,7 @@ namespace WebApi.Controllers.Identity
 
         [HttpPut("update-password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateUserPassword(UpdateUserPasswordCommand request)
         {
             var response = await mediator.Send(request);
@@ -126,7 +126,7 @@ namespace WebApi.Controllers.Identity
             {
                 return Ok(response);
             }
-            return NotFound(response);
+            return BadRequest(response);
         }
         
         [HttpGet("roles/{UserId}")]
@@ -144,19 +144,19 @@ namespace WebApi.Controllers.Identity
             return NotFound(response);
         }
 
-        [HttpGet("user-roles")]
+        [HttpPut("user-roles")]
         [HasPermission(AppFeature.Users, AppAction.Update)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateUserRoles(string UserId)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateUserRoles(UpdateUserRolesCommand request)
         {
-            var response = await mediator.Send(new GetUserRolesQuery(UserId));
+            var response = await mediator.Send(request);
 
             if (response.IsSuccessful)
             {
                 return Ok(response);
             }
-            return NotFound(response);
+            return BadRequest(response);
         }
     }
 }

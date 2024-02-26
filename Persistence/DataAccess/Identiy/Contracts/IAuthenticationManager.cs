@@ -27,5 +27,7 @@ namespace Persistence.DataAccess.Identiy.Contracts
         Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string role);
         Task<IList<Claim>> GetUserClaimsAsync(ApplicationUser user);
         Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
+        Task<IdentityResult> RemoveUserFromRolesAsync(ApplicationUser user, IList<string> role);
+        Task<IdentityResult> AddUserToRolesAsync(ApplicationUser user, IEnumerable<string> role); 
     }
 }
