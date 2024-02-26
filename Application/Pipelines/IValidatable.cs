@@ -1,6 +1,6 @@
 ﻿namespace Application.Pipelines
 {
-    public interface IValidateMe
+    public interface IValidatable
     {
     }
 }

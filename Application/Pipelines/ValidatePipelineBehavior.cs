@@ -4,35 +4,33 @@ using MediatR;
 
 namespace Application.Pipelines
 {
-    public class ValidatePipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : IRequest<TResponse>, IValidateMe
+    public class ValidatePipelineBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
+        where TRequest : IRequest<TResponse>
     {
-        private readonly IEnumerable<IValidator<TResponse>> _validators;
-
-        public ValidatePipelineBehavior(IEnumerable<IValidator<TResponse>> validators)
-        {
-            _validators = validators;
-        }
+       
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            if (_validators.Any())
+            if (validators.Any())
             {
                 var context = new ValidationContext<TRequest>(request);
+
+                List<string> errors = [];
                 var validationResults = await Task
-                    .WhenAll(_validators
+                    .WhenAll(validators
                     .Select(validator => validator.ValidateAsync(context, cancellationToken)));
 
-                if (!validationResults.Any(validator => validator.IsValid))
+                var failures = validationResults.SelectMany(r => r.Errors)
+                  .Where(f => f != null)
+                  .ToList();
+
+                if (failures.Count != 0)
                 {
-                    List<string> errors = [];
-                    var failures = validationResults.SelectMany(validator => validator.Errors)
-                        .Where(f => f != null)
-                        .ToList();
                     foreach (var failure in failures)
                     {
                         errors.Add(failure.ErrorMessage);
                     }
+
                     return (TResponse)await ResponseWrapper.FailAsync(errors);
                 }
             }
