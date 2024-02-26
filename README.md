@@ -1,6 +1,6 @@
 # Authentication System
 
-This authentication system is built using .NET 8 and incorporates roles-permissions functionality to provide secure access control within your application.
+This authentication system is built using .NET 8 and incorporates roles-permissions functionality to provide secure access control within your application. It follows the principles of Clean Architecture to ensure maintainability and scalability.
 
 ## Features
 
@@ -11,6 +11,7 @@ This authentication system is built using .NET 8 and incorporates roles-permissi
 - **Logging**: Comprehensive logging of authentication and authorization events for auditing purposes.
 - **Token-Based Authentication**: Uses tokens to authenticate and authorize users, enhancing security and scalability.
 - **Session Management**: Management of user sessions to track active sessions and handle session expiration.
+
 
 ## Installation
 
